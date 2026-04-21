@@ -168,7 +168,7 @@ function App() {
             </p>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
               <p className="font-semibold text-slate-900">Projected URL (update after deploy):</p>
-              <p>https://bill-audit.vercel.app</p>
+              <p>https://decodedactivities.vercel.app</p>
             </div>
             <button type="button" onClick={() => setScreen(1)} className={primaryButtonClass}>
               Start Activity
