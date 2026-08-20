@@ -1,13 +1,785 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>decodedactivities</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07192F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>The Rivera File · HealthDecoded</title>
+<style>
+:root{
+  --bg:#E3F4FB;
+  --paper:#FFFFFF;
+  --ink:#07192F;
+  --body:#23303F;
+  --muted:#5A6B7B;
+  --teal:#0099A0;
+  --sky:#6BC1D2;
+  --sky-lt:#B5E3F2;
+  --coral:#E2583E;
+  --coral-bg:#FBE9E5;
+  --good:#1F7A5C;
+  --good-bg:#E6F3EE;
+  --mark:#FFD84D;
+  --hair:#C3DEEB;
+  --f: "Helvetica Neue", Helvetica, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --pad: 16px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent}
+html{-webkit-text-size-adjust:100%; overflow-x:hidden; max-width:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--f); font-size:16px; line-height:1.5;
+  padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right);
+  overscroll-behavior-y:none; overflow-x:hidden; max-width:100%;
+}
+.wrap{max-width:1160px; margin:0 auto; padding:0 var(--pad) calc(80px + env(safe-area-inset-bottom))}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- masthead ---------- */
+header.mast{background:var(--ink); color:#fff; padding:calc(18px + env(safe-area-inset-top)) 0 16px}
+.mast .wrap{padding-bottom:0}
+.kicker{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--sky); font-weight:700; margin:0 0 6px}
+h1{font-size:clamp(26px,7vw,38px); line-height:1.1; margin:0 0 8px; font-weight:700; letter-spacing:-.02em}
+.mast p{margin:0; color:#C5D8E6; font-size:15px; max-width:54ch}
+
+/* ---------- control bar ---------- */
+.bar{position:-webkit-sticky; position:sticky; top:0; z-index:50; background:var(--ink); border-top:1px solid #1D3348}
+.bar-inner{max-width:1160px; margin:0 auto; padding:8px var(--pad); display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.tabs{display:flex; gap:6px; flex:1 1 100%; min-width:0}
+@media(min-width:760px){ .tabs{flex:1 1 auto} }
+.tab{
+  flex:1 1 0; min-width:0; min-height:44px; -webkit-appearance:none; appearance:none;
+  border:1px solid #2A4560; background:transparent; color:#B8CADB;
+  font-family:var(--f); font-size:14px; font-weight:600; border-radius:10px;
+  padding:0 6px; cursor:pointer; touch-action:manipulation;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.tab[aria-selected="true"]{background:var(--sky); border-color:var(--sky); color:var(--ink)}
+.clock{display:flex; gap:8px; align-items:center; flex:1 1 auto}
+.clock output{
+  font-size:20px; font-weight:700; color:var(--sky); min-width:64px;
+  font-variant-numeric:tabular-nums; letter-spacing:.02em;
+}
+.clock output.over{color:#FF9C8C}
+.mini{
+  -webkit-appearance:none; appearance:none; min-height:44px; padding:0 14px;
+  border:1px solid #2A4560; background:transparent; color:#B8CADB;
+  font-family:var(--f); font-size:14px; font-weight:600; border-radius:10px;
+  cursor:pointer; touch-action:manipulation;
+}
+.mini[aria-pressed="true"]{background:var(--coral); border-color:var(--coral); color:#fff}
+
+/* ---------- rounds ---------- */
+.round{display:none; padding-top:20px}
+.round.on{display:block}
+.rhead{margin:0 0 18px}
+.rhead .eyebrow{font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--teal)}
+.rhead h2{font-size:clamp(22px,5.5vw,28px); margin:3px 0 6px; letter-spacing:-.02em}
+.rhead p{margin:0; color:var(--body); max-width:62ch}
+
+.stack{display:grid; gap:18px}
+@media(min-width:900px){
+  .split{display:grid; grid-template-columns:1.1fr .9fr; gap:22px; align-items:start}
+  .sticky{position:-webkit-sticky; position:sticky; top:70px}
+}
+
+/* ---------- documents (boxes earn their place here) ---------- */
+.doc{background:var(--paper); border-radius:12px; overflow:hidden; max-width:100%}
+.doc-head{padding:14px 16px 12px; border-bottom:1px solid var(--hair)}
+.doc-org{font-size:18px; font-weight:700; letter-spacing:-.01em}
+.doc-kind{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:3px; font-weight:600}
+.doc-meta{font-size:13px; color:var(--muted); margin-top:9px; line-height:1.7}
+.doc-meta b{color:var(--ink)}
+.stamp{
+  display:inline-block; margin-top:11px; border:2px solid var(--coral); color:var(--coral);
+  font-size:12px; font-weight:700; letter-spacing:.1em; padding:5px 10px; border-radius:4px;
+  transform:rotate(-2deg);
+}
+.claim{padding:12px 16px 4px; font-size:12.5px; color:var(--muted); border-top:1px solid var(--hair); line-height:1.7}
+.claim:first-child{border-top:0}
+.claim b{color:var(--ink)}
+.tag{display:inline-block; font-size:10px; letter-spacing:.08em; font-weight:700; padding:3px 7px; border-radius:4px; margin-left:6px}
+.tag.in{background:var(--good-bg); color:var(--good)}
+.tag.out{background:var(--coral-bg); color:var(--coral)}
+
+table.led{width:100%; border-collapse:collapse; font-size:14px; font-variant-numeric:tabular-nums; max-width:100%}
+table.led th{
+  text-align:right; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  font-weight:700; padding:6px 8px; border-bottom:1px solid var(--hair);
+}
+table.led th:first-child{text-align:left; padding-left:16px}
+table.led th:last-child{padding-right:16px}
+table.led td{padding:11px 8px; text-align:right; border-bottom:1px solid #E8F1F6; vertical-align:top}
+table.led td:first-child{text-align:left; padding-left:16px}
+table.led td:last-child{padding-right:16px}
+tr.total td{border-bottom:0; border-top:2px solid var(--ink); font-weight:700}
+td.owe{color:var(--coral); font-weight:700}
+
+tr.tap{cursor:pointer; touch-action:manipulation}
+tr.tap td{min-height:44px}
+tr.tap:focus-visible{outline:3px solid var(--teal); outline-offset:-3px}
+tr.tap.on td{background:var(--mark)}
+tr.tap.on td:first-child{background:var(--mark)}
+.mk{display:inline-block; width:15px; font-weight:700}
+tr.tap.on .mk::before{content:"?"; color:var(--coral)}
+tr.tap.hit .mk::before{content:"\2713"; color:var(--good)}
+
+@media(max-width:719px){
+  table.led thead{display:none}
+  table.led tr{display:block; padding:12px 16px; border-bottom:1px solid #E8F1F6}
+  table.led tr.total{border-top:2px solid var(--ink); border-bottom:0}
+  table.led td{display:flex; justify-content:space-between; gap:14px; align-items:baseline; padding:3px 0; border:0; text-align:right}
+  table.led td:first-child{display:block; text-align:left; padding:0 0 6px; font-weight:700}
+  table.led td[data-l]::before{
+    content:attr(data-l); color:var(--muted); font-size:10.5px; letter-spacing:.07em;
+    text-transform:uppercase; font-weight:700; text-align:left;
+  }
+  tr.tap.on{background:var(--mark)}
+  tr.tap.on td{background:none}
+  /* the member card is label/value pairs, keep it on one line */
+  table.led.kv tr{display:flex; justify-content:space-between; gap:14px; align-items:baseline; padding:10px 16px}
+  table.led.kv td{display:block; padding:0; text-align:left}
+  table.led.kv td:first-child{padding:0; font-weight:400; color:var(--body)}
+  table.led.kv td:last-child{font-weight:700; text-align:right; white-space:nowrap}
+  table.led.kv td[data-l]::before{content:none}
+}
+
+/* ---------- questions: no card chrome ---------- */
+.q{margin:0 0 26px}
+.q h3{font-size:20px; margin:0 0 4px; letter-spacing:-.01em}
+.q .sub{margin:0 0 14px; color:var(--muted); font-size:14px}
+.hr{height:1px; background:var(--hair); margin:0 0 16px}
+
+.choices{display:grid; gap:8px}
+.choice{
+  display:flex; gap:12px; align-items:flex-start; text-align:left; width:100%;
+  min-height:52px; -webkit-appearance:none; appearance:none;
+  background:var(--paper); border:1px solid transparent; border-radius:10px;
+  padding:13px 14px; cursor:pointer; touch-action:manipulation;
+  font-family:var(--f); font-size:15px; color:var(--body); line-height:1.4;
+}
+.choice .key{
+  flex:0 0 24px; height:24px; border-radius:50%; background:var(--bg); color:var(--muted);
+  font-size:12px; font-weight:700; display:grid; place-items:center;
+}
+.choice.right{background:var(--good-bg); border-color:#B6D9C9; color:var(--ink); font-weight:600}
+.choice.right .key{background:var(--good); color:#fff}
+.choice.wrong{background:var(--coral-bg); border-color:#EEC3BA}
+.choice.wrong .key{background:var(--coral); color:#fff}
+.choice[disabled]{cursor:default; opacity:1}
+
+.verdict{
+  margin-top:14px; border-left:3px solid var(--teal); padding:2px 0 2px 14px;
+  font-size:15px; line-height:1.55; color:var(--body); display:none;
+}
+.verdict.show{display:block}
+.verdict b{color:var(--ink)}
+.verdict.miss{border-left-color:var(--coral)}
+
+/* fill-ins */
+.blanks{display:grid; gap:12px}
+.blank{display:flex; align-items:center; gap:12px}
+.blank label{flex:0 0 116px; font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.blank input{
+  flex:1 1 auto; min-width:0; min-height:48px; -webkit-appearance:none; appearance:none;
+  font-family:var(--f); font-size:16px; font-variant-numeric:tabular-nums;
+  padding:0 13px; border:1px solid var(--hair); border-radius:10px;
+  background:var(--paper); color:var(--ink);
+}
+.blank input:focus{outline:3px solid var(--teal); outline-offset:-1px}
+.blank input.ok{border-color:var(--good); background:var(--good-bg)}
+.blank input.no{border-color:var(--coral); background:var(--coral-bg)}
+.fix{flex:0 0 auto; font-size:14px; font-weight:700; color:var(--good); min-width:70px; text-align:right; font-variant-numeric:tabular-nums}
+
+@media(max-width:479px){
+  .blank{flex-wrap:wrap; gap:8px}
+  .blank label{flex:1 1 100%}
+  .fix{min-width:0}
+}
+
+/* script builder */
+.parts{display:grid; gap:8px; margin-bottom:14px}
+.part{
+  display:flex; gap:12px; align-items:flex-start; min-height:52px;
+  background:var(--paper); border:1px solid transparent; border-radius:10px;
+  padding:14px; cursor:pointer; touch-action:manipulation; font-size:15px; color:var(--body);
+}
+.part input{width:22px; height:22px; margin:0; accent-color:var(--good); flex:0 0 auto}
+.part.on{background:var(--good-bg); border-color:#B6D9C9}
+.script{
+  font-size:15px; line-height:1.75; background:var(--paper);
+  border-radius:10px; padding:16px; min-height:100px; color:var(--ink);
+}
+.script .ph{color:var(--muted)}
+
+/* found list */
+.find{border-left:3px solid var(--hair); padding:2px 0 2px 14px}
+.find.hit{border-left-color:var(--good)}
+.find h4{margin:0 0 4px; font-size:16px}
+.find p{margin:0; font-size:14.5px; line-height:1.5; color:var(--body)}
+.find .say{
+  margin-top:10px; font-size:14.5px; line-height:1.6; color:var(--ink);
+  background:var(--mark); border-radius:8px; padding:11px 13px;
+}
+
+.pips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px}
+.pip{font-size:12.5px; font-weight:700; border:1px solid var(--hair); border-radius:20px; padding:7px 13px; background:var(--paper); color:var(--muted)}
+.pip.found{background:var(--good); border-color:var(--good); color:#fff}
+
+.btn{
+  -webkit-appearance:none; appearance:none; border:0; border-radius:10px; min-height:48px;
+  padding:0 20px; font-size:15px; font-weight:700; font-family:var(--f);
+  cursor:pointer; touch-action:manipulation; background:var(--ink); color:#fff;
+  width:100%; max-width:100%;
+}
+@media(min-width:480px){ .btn{width:auto} }
+.hint{font-size:14px; color:var(--muted); margin:0; line-height:1.5}
+
+.keynote{display:none; margin-top:16px; border-left:3px solid var(--coral); padding:2px 0 2px 14px; font-size:14.5px; line-height:1.55; color:var(--body)}
+body.keys .keynote{display:block}
+.keynote b{color:var(--coral)}
+
+footer.foot{border-top:1px solid var(--hair); margin-top:34px; padding-top:18px; color:var(--muted); font-size:13px}
+
+.print-only{display:none}
+
+@media print{
+  @page{margin:12mm}
+  body{background:#fff; font-size:10.5pt}
+  .bar,.mast p,.btn,.pips,.verdict,.hint,footer.foot,#found,.keynote{display:none !important}
+  header.mast{background:#fff; color:var(--ink); padding:0 0 8px; border-bottom:2px solid var(--ink)}
+  .kicker{color:var(--coral)}
+  .round{display:block !important; page-break-before:always; padding-top:0}
+  .round:first-of-type{page-break-before:auto}
+  #docs-r2a,#docs-r2b{display:none !important}
+  .print-only{display:block !important}
+  .split{display:block}
+  .doc,.choice,.part{break-inside:avoid; background:#fff}
+  .wrap{padding:0}
+}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <p class="kicker">HealthDecoded · Station 2</p>
+    <h1>The Rivera File</h1>
+    <p>One sore throat, four pieces of paper, and at least one of them is wrong. Work in pairs and tap anything that looks off.</p>
+    <p class="print-only">Round 1: 3 minutes. Round 2: 4 minutes. Round 3: 3 minutes.</p>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="bar-inner">
+    <div class="tabs" role="tablist" aria-label="Rounds">
+      <button class="tab" role="tab" aria-selected="true" data-round="1" data-secs="180">1 · Sort it</button>
+      <button class="tab" role="tab" aria-selected="false" data-round="2" data-secs="240">2 · Break it</button>
+      <button class="tab" role="tab" aria-selected="false" data-round="3" data-secs="180">3 · Hand it over</button>
+    </div>
+    <div class="clock">
+      <output id="clock" aria-live="off">3:00</output>
+      <button class="mini" id="run">Start</button>
+      <button class="mini" id="zero">Reset</button>
+      <button class="mini" id="keys" aria-pressed="false">Answer key</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ROUND 1 -->
+<section class="round on" data-round="1" role="tabpanel">
+  <div class="rhead">
+    <div class="eyebrow">Round 1 · 3 minutes</div>
+    <h2>Sort it</h2>
+    <p>Two of these are asking for money, one is a report, and one is a key. Read them, then answer the two questions.</p>
+  </div>
+
+  <div class="split">
+    <div class="stack" id="docs-r1"></div>
+
+    <div class="sticky">
+      <div class="q">
+        <h3>Which of these can actually take your money?</h3>
+        <p class="sub">Tap every one that applies.</p>
+        <div class="choices" id="q1"></div>
+        <div class="verdict" id="v1" aria-live="polite"></div>
+        <div class="keynote"><b>Key:</b> C and D. Listen for the pair that picks B; that's the mistake the whole station is built around.</div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="q">
+        <h3>Find the four numbers</h3>
+        <p class="sub">Urgent care visit line on the EOB, claim 2026-0342871.</p>
+        <div class="blanks" id="q2"></div>
+        <p style="margin:14px 0 0"><button class="btn" id="check2">Check my numbers</button></p>
+        <div class="verdict" id="v2" aria-live="polite"></div>
+        <div class="keynote"><b>Key:</b> 285 / 150 / 100 / 50. Get somebody to say the $135 gap out loud.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROUND 2 -->
+<section class="round" data-round="2" role="tabpanel">
+  <div class="rhead">
+    <div class="eyebrow">Round 2 · 4 minutes</div>
+    <h2>Break it</h2>
+    <p>Hold the EOB next to the two statements. Three things don't add up. Tap any line to flag it and you'll get an answer straight away, right or wrong.</p>
+  </div>
+
+  <p class="print-only hint" style="font-weight:700; color:var(--coral)">Circle every line that looks wrong on the documents from the previous pages, and write what you'd say on the phone next to it.</p>
+
+  <div class="pips" id="pips"></div>
+
+  <div class="split">
+    <div class="stack" id="docs-r2a"></div>
+    <div class="stack">
+      <div id="docs-r2b" class="stack"></div>
+      <div class="q">
+        <h3>What you'd say</h3>
+        <p class="sub">A sentence with a number in it, not a feeling.</p>
+        <div class="stack" id="found" style="gap:14px">
+          <p class="hint">Flag a line and the phone sentence shows up here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="keynote">
+    <b>Key:</b> the second influenza test on NUC-88112 ($40), the out-of-network Metro Regional Lab claim on the EOB ($180), and the un-itemized lab statement. The $285 billed amount is bait; it's a sticker price, not a mistake. Northside is asking $162 and actually owed $122.
+  </div>
+</section>
+
+<!-- ROUND 3 -->
+<section class="round" data-round="3" role="tabpanel">
+  <div class="rhead">
+    <div class="eyebrow">Round 3 · 3 minutes</div>
+    <h2>Hand it over</h2>
+    <p>Jordan is seventeen and sitting at the kitchen table with you. You're not handing over all of this today, just one piece of it.</p>
+  </div>
+
+  <div class="split">
+    <div class="q">
+      <h3>What does Jordan do first?</h3>
+      <p class="sub">Pick one. Think about what happens if it goes wrong.</p>
+      <div class="choices" id="q3"></div>
+      <div class="verdict" id="v3" aria-live="polite"></div>
+      <div class="keynote"><b>Key:</b> B. A and D belong several rungs up. C asks a teenager to make a call about the household's money.</div>
+    </div>
+
+    <div class="q">
+      <h3>Write Jordan's opening line</h3>
+      <p class="sub">Billing picks up. Jordan has about nine seconds.</p>
+      <div class="parts" id="q4"></div>
+      <div class="script" id="script"><span class="ph">Tick the pieces and the sentence builds here.</span></div>
+      <div class="keynote"><b>Key:</b> all four. Have somebody read it out loud while you play the billing office.</div>
+    </div>
+  </div>
+
+  <div class="hr" style="margin-top:8px"></div>
+  <div class="q">
+    <h3>The ladder, if you want to keep going</h3>
+    <p class="sub">Each rung should feel boring before you leave it.</p>
+    <div class="stack" style="gap:10px; font-size:15px; line-height:1.55">
+      <div><b>This month.</b> Jordan finds the member ID and member services number and reads them back.</div>
+      <div><b>Next.</b> Jordan opens the EOB and says what it is before you do.</div>
+      <div><b>Then.</b> Jordan calls billing while you sit next to them with the script.</div>
+      <div><b>Eventually.</b> Jordan books the follow-up and tells you the date.</div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <p>Fictional patient, fictional plan, fictional numbers, built for teaching. Plan rules, network status, and billing protections vary by plan and by state. Check your own documents and call the number on your own card.<br>
+  HealthDecoded · healthdecodedinitiative.org</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var money = function(n){ return "$" + n.toFixed(2); };
+  function el(t, c, h){ var n = document.createElement(t); if(c) n.className = c; if(h !== undefined) n.innerHTML = h; return n; }
+
+  /* ------------------------- data ------------------------- */
+  var CARD = {
+    org:"Bluepeak Health", kind:"Document A · Member card",
+    meta:[["Member","JORDAN RIVERA"],["Member ID","BPH 4471 82910"],["Group","HS-2210"],
+          ["Date of birth","03/12/2009"],["Plan","Bluepeak Choice PPO"],["Primary care","Dr. A. Okonkwo"]],
+    rows:[["Office visit copay","$25"],["Urgent care copay","$50"],["Emergency room copay","$350"],
+          ["Deductible","$1,500 / year"],["Coinsurance","20% after deductible"],
+          ["Out-of-pocket maximum","$6,000 / year"],["Member services","1-800-555-0142"]],
+    note:"Preventive care covered at 100% in-network."
+  };
+
+  var EOB = [
+    { claim:"Claim 2026-0342871", who:"Northside Urgent Care", net:"in", dos:"02/03/2026", lines:[
+      { id:"eob-visit", label:"Office visit, urgent care", code:"99213", billed:285, allowed:150, paid:100, owe:50, note:"copay" },
+      { id:"eob-strep", label:"Rapid strep test", code:"87880", billed:75, allowed:32, paid:0, owe:32, note:"deductible" },
+      { id:"eob-flu",   label:"Rapid influenza test", code:"87804", billed:95, allowed:40, paid:0, owe:40, note:"deductible" }
+    ]},
+    { claim:"Claim 2026-0342905", who:"Metro Regional Lab", net:"out", dos:"02/03/2026", lines:[
+      { id:"eob-lab", label:"Throat culture, send-out", code:"87070", billed:180, allowed:null, paid:0, owe:180, note:"not covered" }
+    ]}
+  ];
+
+  var NUC = [
+    { id:"nuc-visit", label:"Office visit, urgent care", date:"02/03/2026", amt:50 },
+    { id:"nuc-strep", label:"Rapid strep test", date:"02/03/2026", amt:32 },
+    { id:"nuc-flu1",  label:"Rapid influenza test", date:"02/03/2026", amt:40 },
+    { id:"nuc-flu2",  label:"Rapid influenza test", date:"02/03/2026", amt:40 }
+  ];
+  var MRL = [ { id:"mrl-lab", label:"Laboratory services", date:"02/03/2026", amt:180 } ];
+
+  var FIND = {
+    "nuc-flu2": { hit:true, slot:1, title:"The duplicate",
+      why:"The EOB has one influenza test on it. This statement has two. Northside is asking for $162 and the EOB says $122.",
+      say:"\u201cMy explanation of benefits shows one influenza test on claim 2026-0342871, and the statement shows two. Can you send a corrected statement?\u201d" },
+    "eob-lab": { hit:true, slot:2, title:"The stranger",
+      why:"Metro Regional Lab is out-of-network and Jordan never picked it. Northside sent the culture there. The plan allowed nothing, so the whole $180 landed on the family.",
+      say:"\u201cWhy was an out-of-network lab used at an in-network clinic? I\u2019d like a network-gap exception from my plan, and the lab\u2019s self-pay rate.\u201d" },
+    "mrl-lab": { hit:true, slot:3, title:"The blank space",
+      why:"\u201cLaboratory services\u201d and a balance. No codes, no dates, nothing you can check it against.",
+      say:"\u201cCan you send an itemized statement with procedure codes and dates of service before I review this?\u201d" },
+    "eob-visit": { hit:false,
+      why:"Fair guess, but this one's fine. $285 is the sticker price and $150 is what the plan actually negotiated. That gap is normal.",
+      say:"Nothing to call about. Though if the family were uninsured, that gap is exactly why you'd ask for the self-pay rate." },
+    "eob-strep": { hit:false, why:"Clean. $75 billed, $32 allowed, and it went to the deductible because the deductible wasn't met. It matches the statement.", say:"" },
+    "eob-flu":   { hit:false, why:"This line is fine on the EOB. The problem is over on the Northside statement.", say:"" },
+    "nuc-visit": { hit:false, why:"Clean. $50 is the urgent care copay off the card, and the EOB agrees.", say:"" },
+    "nuc-strep": { hit:false, why:"Clean. $32 matches the allowed amount on the EOB.", say:"" },
+    "nuc-flu1":  { hit:false, why:"This one's legitimate. It's the identical line right below it that shouldn't be there.", say:"" }
+  };
+  var MISS = { hit:false, why:"Nothing wrong here, but checking it wasn't wasted. Going line by line is the habit.", say:"" };
+
+  /* ------------------------- render ------------------------- */
+  function cardDoc(){
+    var b = el("div","doc"), h = el("div","doc-head");
+    h.appendChild(el("div","doc-org", CARD.org));
+    h.appendChild(el("div","doc-kind", CARD.kind));
+    h.appendChild(el("div","doc-meta", CARD.meta.map(function(r){ return r[0]+": <b>"+r[1]+"</b>"; }).join("<br>")));
+    b.appendChild(h);
+    var t = el("table","led kv"), tb = el("tbody");
+    CARD.rows.forEach(function(r){
+      var tr = el("tr");
+      tr.innerHTML = "<td>"+r[0]+"</td><td data-l=\"\">"+r[1]+"</td>";
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); b.appendChild(t);
+    var n = el("div","doc-meta", CARD.note); n.style.padding = "12px 16px 15px"; b.appendChild(n);
+    return b;
+  }
+
+  function eobDoc(tappable){
+    var b = el("div","doc"), h = el("div","doc-head");
+    h.appendChild(el("div","doc-org","Bluepeak Health"));
+    h.appendChild(el("div","doc-kind","Document B · Explanation of benefits"));
+    h.appendChild(el("div","doc-meta","Issued: <b>02/21/2026</b><br>Member: <b>JORDAN RIVERA</b> · ID <b>BPH 4471 82910</b>"));
+    h.appendChild(el("div","stamp","THIS IS NOT A BILL"));
+    b.appendChild(h);
+
+    EOB.forEach(function(c){
+      b.appendChild(el("div","claim",
+        "<b>"+c.claim+"</b> · "+c.who+"<span class='tag "+c.net+"'>"+(c.net==="in"?"IN NETWORK":"OUT OF NETWORK")+"</span>"+
+        "<br>Date of service "+c.dos));
+      var t = el("table","led");
+      t.innerHTML = "<thead><tr><th>Service</th><th>Billed</th><th>Allowed</th><th>Plan paid</th><th>You may owe</th></tr></thead>";
+      var tb = el("tbody");
+      c.lines.forEach(function(l){
+        var tr = el("tr", tappable ? "tap" : "");
+        if(tappable){ tr.dataset.id = l.id; tr.tabIndex = 0; tr.setAttribute("role","button"); }
+        tr.innerHTML =
+          "<td>"+(tappable?"<span class='mk'></span>":"")+l.label+"<br><span style='color:var(--muted);font-weight:400'>"+l.code+"</span></td>"+
+          "<td data-l='Billed'>"+money(l.billed)+"</td>"+
+          "<td data-l='Allowed'>"+(l.allowed===null?"&mdash;":money(l.allowed))+"</td>"+
+          "<td data-l='Plan paid'>"+money(l.paid)+"</td>"+
+          "<td class='owe' data-l='You may owe'>"+money(l.owe)+" <span style='color:var(--muted);font-weight:400'>("+l.note+")</span></td>";
+        tb.appendChild(tr);
+      });
+      t.appendChild(tb); b.appendChild(t);
+    });
+
+    var f = el("div","doc-meta","Deductible applied to date: <b>$72.00</b> of $1,500.00<br>Total you may owe across both claims: <b>$302.00</b>");
+    f.style.cssText = "padding:13px 16px 16px; border-top:2px solid var(--ink)";
+    b.appendChild(f);
+    return b;
+  }
+
+  function billDoc(o){
+    var b = el("div","doc"), h = el("div","doc-head");
+    h.appendChild(el("div","doc-org", o.org));
+    h.appendChild(el("div","doc-kind","Document "+o.letter+" · Patient statement"));
+    h.appendChild(el("div","doc-meta",
+      "Statement: <b>"+o.num+"</b><br>Statement date: <b>"+o.date+"</b><br>Patient: <b>JORDAN RIVERA</b>"+
+      (o.due ? "<br>Payment due: <b>"+o.due+"</b>" : "")));
+    b.appendChild(h);
+
+    var t = el("table","led");
+    t.innerHTML = "<thead><tr><th>Description</th><th>Date</th><th>Amount</th></tr></thead>";
+    var tb = el("tbody"), total = 0;
+    o.lines.forEach(function(l){
+      total += l.amt;
+      var tr = el("tr", o.tappable ? "tap" : "");
+      if(o.tappable){ tr.dataset.id = l.id; tr.tabIndex = 0; tr.setAttribute("role","button"); }
+      tr.innerHTML = "<td>"+(o.tappable?"<span class='mk'></span>":"")+l.label+"</td>"+
+                     "<td data-l='Date'>"+l.date+"</td><td data-l='Amount'>"+money(l.amt)+"</td>";
+      tb.appendChild(tr);
+    });
+    var tr = el("tr","total");
+    tr.innerHTML = "<td>Amount due</td><td></td><td class='owe' data-l='Total'>"+money(total)+"</td>";
+    tb.appendChild(tr); t.appendChild(tb); b.appendChild(t);
+
+    if(o.note){ var n = el("div","doc-meta", o.note); n.style.padding = "12px 16px 15px"; b.appendChild(n); }
+    return b;
+  }
+
+  function nuc(tap){ return { letter:"C", org:"Northside Urgent Care", num:"NUC-88112", date:"02/26/2026",
+    due:"03/28/2026", lines:NUC, tappable:tap, note:"Questions about this statement? Call billing at 1-800-555-0177." }; }
+  function mrl(tap){ return { letter:"D", org:"Metro Regional Lab", num:"MRL-4471", date:"02/24/2026",
+    due:"Balance due in full", lines:MRL, tappable:tap, note:"Remit payment to the address above." }; }
+
+  var r1 = $("docs-r1");
+  r1.appendChild(cardDoc()); r1.appendChild(eobDoc(false));
+  r1.appendChild(billDoc(nuc(false))); r1.appendChild(billDoc(mrl(false)));
+  $("docs-r2a").appendChild(eobDoc(true));
+  $("docs-r2b").appendChild(billDoc(nuc(true)));
+  $("docs-r2b").appendChild(billDoc(mrl(true)));
+
+  /* ------------------- Q1: which can take money ------------------- */
+  var Q1_RIGHT = ["C","D"];
+  var Q1 = [["A","The Bluepeak Health member card"],
+            ["B","The explanation of benefits, Feb 21"],
+            ["C","The Northside Urgent Care statement, Feb 26"],
+            ["D","The Metro Regional Lab statement, Feb 24"]];
+  var picked = [], q1done = false, q1box = $("q1"), v1 = $("v1");
+
+  Q1.forEach(function(o){
+    var b = el("button","choice");
+    b.type = "button";
+    b.innerHTML = "<span class='key'>"+o[0]+"</span><span>"+o[1]+"</span>";
+    b.dataset.k = o[0];
+    b.addEventListener("click", function(){
+      if(q1done) return;
+      var i = picked.indexOf(o[0]);
+      if(i > -1){ picked.splice(i,1); b.classList.remove("right","wrong"); }
+      else { picked.push(o[0]); b.classList.add(Q1_RIGHT.indexOf(o[0]) > -1 ? "right" : "wrong"); }
+      gradeQ1(o[0]);
+    });
+    q1box.appendChild(b);
+  });
+
+  function revealQ1(){
+    q1done = true;
+    Array.prototype.forEach.call(q1box.children, function(c){
+      c.disabled = true;
+      if(Q1_RIGHT.indexOf(c.dataset.k) > -1) c.classList.add("right");
+    });
+  }
+
+  function gradeQ1(last){
+    if(!picked.length){ v1.className = "verdict"; return; }
+    var wrong = Q1_RIGHT.indexOf(last) === -1 && picked.indexOf(last) > -1;
+
+    if(wrong){
+      revealQ1();
+      v1.className = "verdict show miss";
+      if(last === "B"){
+        v1.innerHTML = "<b>The answer is C and D.</b> The EOB isn't a bill, even though it looks like one. It's the insurer telling you what it already decided. Nobody at Bluepeak is waiting on a check. This is the mistake families make most.";
+      } else {
+        v1.innerHTML = "<b>The answer is C and D.</b> The card is a key, not a bill. It tells you what you owe at the door and who to call, but it never asks for money.";
+      }
+      return;
+    }
+
+    if(picked.length === 2 && Q1_RIGHT.every(function(k){ return picked.indexOf(k) > -1; })){
+      revealQ1();
+      v1.className = "verdict show";
+      v1.innerHTML = "<b>Right.</b> C and D are the only two asking for money. B is the insurer reporting a decision it already made, and A is the card that got you the negotiated price in the first place.";
+    } else {
+      v1.className = "verdict show";
+      v1.innerHTML = "Keep going. More than one of these is asking to be paid, because two separate businesses treated Jordan that day.";
+    }
+  }
+
+  /* ------------------- Q2: the four numbers ------------------- */
+  var Q2 = [["Billed",285],["Allowed",150],["Plan paid",100],["You may owe",50]];
+  var q2box = $("q2"), v2 = $("v2");
+  Q2.forEach(function(f,i){
+    var row = el("div","blank");
+    var lab = el("label","",f[0]); lab.setAttribute("for","f"+i);
+    var inp = el("input"); inp.id = "f"+i; inp.type = "text"; inp.inputMode = "decimal";
+    inp.placeholder = "$"; inp.autocomplete = "off";
+    var fix = el("span","fix");
+    row.appendChild(lab); row.appendChild(inp); row.appendChild(fix);
+    q2box.appendChild(row);
+  });
+
+  $("check2").addEventListener("click", function(){
+    var got = 0;
+    Q2.forEach(function(f,i){
+      var inp = $("f"+i);
+      var fix = inp.parentNode.querySelector(".fix");
+      var num = parseFloat(String(inp.value).replace(/[^0-9.]/g,""));
+      var ok = Math.abs(num - f[1]) < 0.005;
+      inp.className = ok ? "ok" : "no";
+      fix.textContent = ok ? "" : money(f[1]);
+      if(ok) got++;
+    });
+    v2.className = "verdict show" + (got === 4 ? "" : " miss");
+    v2.innerHTML = got === 4
+      ? "<b>All four.</b> Now say the gap out loud. Northside asked for $285 and the negotiated price was $150. Nobody was ever going to pay $285, which is why a sticker price shouldn't scare anyone into paying fast."
+      : "<b>" + got + " of 4.</b> The right numbers are in green on the right. They read straight across one row of the EOB: billed, allowed, plan paid, then your share.";
+  });
+
+  /* ------------------- Round 2 flagging ------------------- */
+  var slots = [null,null,null], seen = {}, pips = $("pips"), found = $("found");
+
+  function drawPips(){
+    pips.innerHTML = "";
+    for(var i = 1; i <= 3; i++){
+      var g = slots[i-1];
+      var p = el("span","pip" + (g ? " found" : ""));
+      p.textContent = g ? (i + ". " + g) : (i + ". still looking");
+      pips.appendChild(p);
+    }
+  }
+  drawPips();
+
+  function drawFound(){
+    var ks = Object.keys(seen);
+    if(!ks.length){ found.innerHTML = "<p class='hint'>Flag a line and the phone sentence shows up here.</p>"; return; }
+    found.innerHTML = "";
+    ks.forEach(function(k){
+      var f = seen[k];
+      var w = el("div","find" + (f.hit ? " hit" : ""));
+      w.appendChild(el("h4","", f.hit ? f.title : "Not one of them"));
+      w.appendChild(el("p","", f.why));
+      if(f.say) w.appendChild(el("div","say", f.say));
+      found.appendChild(w);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll("tr.tap"), function(tr){
+    function toggle(){
+      var id = tr.dataset.id, f = FIND[id] || MISS;
+      if(tr.classList.contains("on")){
+        tr.classList.remove("on","hit");
+        delete seen[id];
+        if(f.hit) slots[f.slot-1] = null;
+      } else {
+        tr.classList.add("on");
+        if(f.hit){ tr.classList.add("hit"); slots[f.slot-1] = f.title; }
+        seen[id] = f;
+      }
+      drawPips(); drawFound();
+    }
+    tr.addEventListener("click", toggle);
+    tr.addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggle(); }
+    });
+  });
+
+  /* ------------------- Q3: first rung ------------------- */
+  var Q3 = [
+    ["A","Call the insurer and argue the out-of-network lab charge","That one needs judgment about what to push on and what to let go, and it can go sideways in ways a first-timer won't see coming."],
+    ["B","Find the member ID and member services number on the card, and read them back","It's factual, it's repeatable, and nothing bad happens if a seventeen-year-old gets it wrong."],
+    ["C","Negotiate a payment plan with Northside","That asks a teenager to make a call about the household's money, which isn't theirs to make yet."],
+    ["D","File a written appeal","Appeals have deadlines and consequences, and a missed one is hard to undo."]
+  ];
+  var q3box = $("q3"), v3 = $("v3"), q3done = false;
+  Q3.forEach(function(o){
+    var b = el("button","choice"); b.type = "button";
+    b.innerHTML = "<span class='key'>"+o[0]+"</span><span>"+o[1]+"</span>";
+    b.addEventListener("click", function(){
+      if(q3done) return;
+      q3done = true;
+      var right = o[0] === "B";
+      b.classList.add(right ? "right" : "wrong");
+      if(!right) q3box.children[1].classList.add("right");
+      Array.prototype.forEach.call(q3box.children, function(c){ c.disabled = true; });
+      v3.className = "verdict show" + (right ? "" : " miss");
+      v3.innerHTML = right
+        ? "<b>Yes.</b> " + o[2] + " That's what a first step should look like."
+        : "<b>The answer is B.</b> " + o[2] + " B is factual, repeatable, and nothing breaks if it goes wrong.";
+    });
+    q3box.appendChild(b);
+  });
+
+  /* ------------------- Q4: script builder ------------------- */
+  var Q4 = [
+    { k:"who",  label:"Who Jordan is", text:"Hi, my name is Jordan Rivera, date of birth March 12th, 2009." },
+    { k:"what", label:"Which paper Jordan is holding", text:"I\u2019m calling about statement NUC-88112, dated February 26th." },
+    { k:"ev",   label:"What the EOB says instead", text:"My explanation of benefits for claim 2026-0342871 shows one influenza test, and the statement shows two." },
+    { k:"ask",  label:"One clear ask", text:"Can you check that and send me a corrected statement?" }
+  ];
+  var q4box = $("q4"), scriptBox = $("script"), on = {};
+  Q4.forEach(function(p){
+    var lab = el("label","part");
+    var cb = el("input"); cb.type = "checkbox";
+    lab.appendChild(cb); lab.appendChild(el("span","",p.label));
+    cb.addEventListener("change", function(){
+      on[p.k] = cb.checked;
+      lab.classList.toggle("on", cb.checked);
+      drawScript();
+    });
+    q4box.appendChild(lab);
+  });
+  function drawScript(){
+    var parts = Q4.filter(function(p){ return on[p.k]; }).map(function(p){ return p.text; });
+    if(!parts.length){ scriptBox.innerHTML = "<span class='ph'>Tick the pieces and the sentence builds here.</span>"; return; }
+    scriptBox.textContent = "\u201c" + parts.join(" ") + "\u201d";
+    if(parts.length === 4){
+      var t = el("div");
+      t.style.cssText = "margin-top:12px; font-size:14.5px; color:var(--good); font-weight:700";
+      t.textContent = "Read it out loud. That's the whole point of this round.";
+      scriptBox.appendChild(t);
+    }
+  }
+
+  /* ------------------- tabs, timer, key ------------------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var rounds = Array.prototype.slice.call(document.querySelectorAll(".round"));
+  var clock = $("clock"), runBtn = $("run");
+  var secs = 180, left = 180, timer = null;
+
+  function fmt(s){ var neg = s < 0; s = Math.abs(s);
+    return (neg?"-":"") + Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); }
+  function paint(){ clock.textContent = fmt(left); clock.classList.toggle("over", left <= 0); }
+  function stop(){ if(timer){ clearInterval(timer); timer = null; } runBtn.textContent = "Start"; }
+
+  runBtn.addEventListener("click", function(){
+    if(timer){ stop(); return; }
+    runBtn.textContent = "Pause";
+    timer = setInterval(function(){ left--; paint(); }, 1000);
+  });
+  $("zero").addEventListener("click", function(){ stop(); left = secs; paint(); });
+
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(){
+      tabs.forEach(function(x){ x.setAttribute("aria-selected", x === t ? "true" : "false"); });
+      rounds.forEach(function(r){ r.classList.toggle("on", r.dataset.round === t.dataset.round); });
+      stop(); secs = parseInt(t.dataset.secs,10); left = secs; paint();
+      window.scrollTo(0,0);
+    });
+  });
+  paint();
+
+  var keyBtn = $("keys");
+  keyBtn.addEventListener("click", function(){
+    var shown = document.body.classList.toggle("keys");
+    keyBtn.setAttribute("aria-pressed", shown ? "true" : "false");
+    keyBtn.textContent = shown ? "Hide key" : "Answer key";
+  });
+})();
+</script>
+</body>
 </html>
